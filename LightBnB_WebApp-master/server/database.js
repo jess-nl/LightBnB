@@ -57,18 +57,6 @@ exports.getUserWithId = getUserWithId;
  * @return {Promise<{}>} A promise to the user.
  */
 
-// const addUser =  function(user) {
-//   const userId = Object.keys(users).length + 1;
-//   user.id = userId;
-//   users[userId] = user;
-//   return Promise.resolve(user);
-// }
-
-// Accepts a user object that will have a name, email, and hashed password property.
-// This function should insert the new user into the database.
-// It will return a promise that resolves with the new user object. This object should contain the user's id after it's been added to the database.
-// Add RETURNING *; to the end of an INSERT query to return the objects that were inserted. This is handy when you need the auto generated id of an object you've just added to the database.
-
 const addUser =  function(user) {
   return pool.query(`
     INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *;
@@ -110,14 +98,6 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 
-// const getAllProperties = function(options, limit = 10) {
-//   return pool.query(`
-//   SELECT * FROM properties
-//   LIMIT $1
-//   `, [limit])
-//   .then(res => res.rows);
-// }
-
 const getAllProperties = function(options, limit = 10) {
   // 1
   const queryParams = [];
@@ -127,18 +107,6 @@ const getAllProperties = function(options, limit = 10) {
   FROM properties
   JOIN property_reviews ON properties.id = property_id
   `;
-
-  // Check if a city has been passed in as an option. Add the city to the params array and create a WHERE clause for the city.
-  // We can use the length of the array to dynamically get the $n placeholder number. Since this is the first parameter, it will be $1.
-  // The % syntax for the LIKE clause must be part of the parameter, not the query.
-  // Add any query that comes after the WHERE clause.
-  // Console log everything just to make sure we've done it right.
-  // Run the query.
-
-  // if an owner_id is passed in, only return properties belonging to that owner.
-  // if a minimum_price_per_night and a maximum_price_per_night, only return properties within that price range.
-  // if a minimum_rating is passed in, only return properties with a rating equal to or higher than that.
-  // Remember that all of these may be passed in at the same time so they all need to work together. You will need to use AND for every filter after the first one. Also, none of these might be passed in, so the query still needs to work without a WHERE clause.
 
   // 3
   if (options.city) {
@@ -160,18 +128,6 @@ const getAllProperties = function(options, limit = 10) {
     queryParams.push(`${options.owner_id}`);
     queryString += `owner_id = $${queryParams.length} `;
   }
-
-  // if (options.maximum_price_per_night >= options.minimum_price_per_night && options.minimum_price_per_night <= options.maximum_price_per_night) {
-  //   if (queryParams.length === 0) {
-  //     queryString += ` WHERE `
-  //   } else {
-  //     queryString += ` AND `
-  //   }
-  //   queryParams.push(`${options.minimum_price_per_night}`);
-  //   queryString += `cost_per_night > $${queryParams.length} `;
-  // } else {
-
-  // }
 
   if (options.minimum_price_per_night) {
     if (queryParams.length === 0) {
@@ -226,10 +182,49 @@ exports.getAllProperties = getAllProperties;
  * @param {{}} property An object containing all of the property details.
  * @return {Promise<{}>} A promise to the property.
  */
+
+// const addProperty = function(property) {
+//   const propertyId = Object.keys(properties).length + 1;
+//   property.id = propertyId;
+//   properties[propertyId] = property;
+//   return Promise.resolve(property);
+// }
+
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  return pool.query(`
+    INSERT INTO properties (
+      owner_id,
+      title,
+      description,
+      thumbnail_photo_url,
+      cover_photo_url,
+      cost_per_night,
+      street,
+      city,
+      province,
+      post_code,
+      country,
+      parking_spaces,
+      number_of_bathrooms,
+      number_of_bedrooms
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *;
+  `, [
+      property.owner_id,
+      property.title,
+      property.description,
+      property.thumbnail_photo_url,
+      property.cover_photo_url,
+      property.cost_per_night,
+      property.street,
+      property.city,
+      property.province,
+      property.post_code,
+      property.country,
+      property.parking_spaces,
+      property.number_of_bathrooms,
+      property.number_of_bedrooms
+  ])
+  .then(res => res.rows);
 }
+
 exports.addProperty = addProperty;
